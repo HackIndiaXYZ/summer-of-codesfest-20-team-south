@@ -2,19 +2,9 @@
 
 <div align="center">
 
-<img src="./public/logo.svg" alt="Project Vaigai Logo" width="120"/>
+# 🌊 Project Vaigai
 
-### Smart Hostel Management Platform for Modern Educational Institutions
-
-Digitizing hostel operations through intelligent complaint management, QR-based visitor verification, AI-assisted workflows, offline synchronization, and role-based administration.
-
----
-
-![React](https://img.shields.io/badge/React-19-blue?logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.x-38BDF8?logo=tailwindcss)
-![Vite](https://img.shields.io/badge/Vite-Latest-646CFF?logo=vite)
-![Status](https://img.shields.io/badge/Frontend-Completed-success)
+### Smart Hostel Management Platform
 
 </div>
 
