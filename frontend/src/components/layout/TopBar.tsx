@@ -25,6 +25,12 @@ import {
 } from 'lucide-react';
 import Badge from '../common/Badge';
 
+export interface ProfileStat {
+  label: string;
+  value: string;
+  color?: string;
+}
+
 export interface TopBarProps {
   currentPageTitle: string;
   userName?: string;
@@ -40,6 +46,13 @@ export interface TopBarProps {
   onToggleSidebar: () => void;
   onNavigate: (route: string) => void;
   onLogout: () => void;
+  // Profile Overview modal — now prop-driven instead of hardcoded to Super Admin
+  profileEmployeeId?: string;
+  profileEmail?: string;
+  profileAccessLevel?: string;
+  profileOfficeLocation?: string;
+  profilePrimaryCampus?: string;
+  profileStats?: ProfileStat[];
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -57,6 +70,17 @@ export const TopBar: React.FC<TopBarProps> = ({
   onToggleSidebar,
   onNavigate,
   onLogout,
+  profileEmployeeId = 'SA-9001',
+  profileEmail = 'superadmin@vaigai.edu.in',
+  profileAccessLevel = 'Root Administrator',
+  profileOfficeLocation = 'Central Wing',
+  profilePrimaryCampus = 'Main Campus',
+  profileStats = [
+    { label: 'Total Users Managed', value: '1,482' },
+    { label: 'Hostels Managed', value: '5 Blocks', color: '#2A5C8A' },
+    { label: 'Active Sessions', value: '12', color: '#059669' },
+    { label: 'Pending Approvals', value: '3', color: '#D97706' },
+  ],
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -68,10 +92,11 @@ export const TopBar: React.FC<TopBarProps> = ({
   const [editToast, setEditToast] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const isSuperAdmin = userRole.toLowerCase().includes('super') || userRole.toLowerCase().includes('admin');
 
-  // Close dropdown on outside click
+  // Close profile dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -80,6 +105,24 @@ export const TopBar: React.FC<TopBarProps> = ({
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close search overlay on outside click or Escape
+  useEffect(() => {
+    const handleClickOutsideSearch = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSearchOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutsideSearch);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutsideSearch);
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, []);
 
   const handleProfileClick = () => {
@@ -112,12 +155,27 @@ export const TopBar: React.FC<TopBarProps> = ({
     }
   };
 
+  // Bug fix #2: notification bell only knew 'superadmin' vs a resident fallback.
+  // Every other role (security, warden, maintenance) landed on a route that
+  // doesn't exist in their dashboard. Route properly by role, same pattern
+  // as handleProfileClick / handleSettingsClick above.
+  const getNotificationsRoute = () => {
+    if (isSuperAdmin) return '/superadmin/alerts';
+    if (userRole.toLowerCase().includes('warden')) return '/warden/notifications';
+    if (userRole.toLowerCase().includes('maintenance')) return '/maintenance/notifications';
+    if (userRole.toLowerCase().includes('security')) return '/security/notifications';
+    return '/resident/notifications';
+  };
+
   return (
     <>
       <header className="sticky top-0 z-20 bg-white border-b border-[#E7E4DF] h-[72px] px-4 sm:px-6 lg:px-8 flex items-center justify-between transition-all">
         {/* Left: Back Button (if requested/available) + Sidebar Toggle + Title */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {(showBackButton || onBack) && (
+          {/* Bug fix #1: (showBackButton || onBack) was always truthy since every
+              dashboard passes an onBack function — showBackButton was ignored.
+              Require both. */}
+          {showBackButton && onBack && (
             <button
               type="button"
               onClick={() => onBack && onBack()}
@@ -151,7 +209,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
 
         {/* Right Controls */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-3 sm:gap-4">
           {/* Vaigai AI Helper Quick Trigger Button */}
           {onOpenAiHelper && (
             <button
@@ -164,10 +222,21 @@ export const TopBar: React.FC<TopBarProps> = ({
               <span className="hidden sm:inline tracking-tight">Vaigai AI Helper</span>
             </button>
           )}
+
           {/* Search Input / Icon */}
-          <div className="relative">
-            {searchOpen ? (
-              <div className="flex items-center bg-[#FAF8F2] border border-[#2A5C8A] rounded-full px-3 py-1.5 w-48 sm:w-64 animate-fadeIn">
+          <div className="relative" ref={searchRef}>
+            <button
+              onClick={() => setSearchOpen(true)}
+              className={`p-2.5 rounded-full border border-[#E7E4DF] text-[#666666] hover:text-[#1A1A1A] hover:bg-[#FAF8F2] hover:border-[#2A5C8A] transition-all cursor-pointer ${
+                searchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              }`}
+              title="Search"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+
+            {searchOpen && (
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 z-30 flex items-center bg-white border border-[#2A5C8A] rounded-full pl-3.5 pr-1.5 py-1.5 w-64 sm:w-80 shadow-lg animate-fadeIn">
                 <Search className="w-4 h-4 text-[#8E8E93] mr-2 shrink-0" />
                 <input
                   type="text"
@@ -175,24 +244,25 @@ export const TopBar: React.FC<TopBarProps> = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   autoFocus
-                  onBlur={() => !searchQuery && setSearchOpen(false)}
                   className="w-full bg-transparent text-xs outline-none font-body text-[#1A1A1A]"
                 />
+                <button
+                  onClick={() => {
+                    setSearchOpen(false);
+                    setSearchQuery('');
+                  }}
+                  className="p-1.5 rounded-full text-[#8E8E93] hover:text-[#1A1A1A] hover:bg-[#FAF8F2] transition-all cursor-pointer shrink-0"
+                  title="Close search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
-            ) : (
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="p-2.5 rounded-full border border-[#E7E4DF] text-[#666666] hover:text-[#1A1A1A] hover:bg-[#FAF8F2] hover:border-[#2A5C8A] transition-all cursor-pointer"
-                title="Search"
-              >
-                <Search className="w-4 h-4" />
-              </button>
             )}
           </div>
 
           {/* Notifications Bell */}
           <button
-            onClick={() => onNavigate(isSuperAdmin ? '/superadmin/alerts' : '/resident/notifications')}
+            onClick={() => onNavigate(getNotificationsRoute())}
             className="p-2.5 rounded-full border border-[#E7E4DF] text-[#666666] hover:text-[#1A1A1A] hover:bg-[#FAF8F2] hover:border-[#2A5C8A] transition-all relative group cursor-pointer"
             title="Notifications & System Alerts"
           >
@@ -256,7 +326,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 </div>
 
                 <div className="space-y-0.5">
-                  {/* Super Administrator Overview Item */}
+                  {/* Role Overview Item */}
                   <button
                     type="button"
                     onClick={() => {
@@ -346,53 +416,48 @@ export const TopBar: React.FC<TopBarProps> = ({
               </p>
             </div>
 
-            {/* Profile Info Details Grid */}
+            {/* Profile Info Details Grid — now prop-driven, no more hardcoded Super Admin data */}
             <div className="py-4 space-y-2.5 text-xs font-body">
               <div className="grid grid-cols-2 gap-3 p-3 bg-[#FAF8F2] rounded-2xl border border-[#E7E4DF]/80">
                 <div>
                   <span className="text-[10px] text-[#8E8E93] font-bold uppercase block">Employee ID</span>
-                  <span className="font-mono font-extrabold text-[#1A1A1A] text-xs">SA-9001</span>
+                  <span className="font-mono font-extrabold text-[#1A1A1A] text-xs">{profileEmployeeId}</span>
                 </div>
                 <div>
                   <span className="text-[10px] text-[#8E8E93] font-bold uppercase block">Access Level</span>
-                  <span className="font-bold text-[#059669]">Root Administrator</span>
+                  <span className="font-bold text-[#059669]">{profileAccessLevel}</span>
                 </div>
                 <div className="col-span-2">
                   <span className="text-[10px] text-[#8E8E93] font-bold uppercase block">Email Address</span>
-                  <span className="font-bold text-[#1A1A1A]">superadmin@vaigai.edu.in</span>
+                  <span className="font-bold text-[#1A1A1A]">{profileEmail}</span>
                 </div>
                 <div>
                   <span className="text-[10px] text-[#8E8E93] font-bold uppercase block">Office Location</span>
-                  <span className="font-bold text-[#1A1A1A]">Central Wing</span>
+                  <span className="font-bold text-[#1A1A1A]">{profileOfficeLocation}</span>
                 </div>
                 <div>
                   <span className="text-[10px] text-[#8E8E93] font-bold uppercase block">Primary Campus</span>
-                  <span className="font-bold text-[#1A1A1A]">Main Campus</span>
+                  <span className="font-bold text-[#1A1A1A]">{profilePrimaryCampus}</span>
                 </div>
               </div>
 
-              {/* Quick Statistics */}
+              {/* Quick Statistics — prop-driven */}
               <div className="pt-2">
                 <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider block mb-2">
-                  Quick Administration Metrics
+                  Quick Statistics
                 </span>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="p-2.5 bg-white border border-[#E7E4DF] rounded-xl text-center">
-                    <span className="text-lg font-black font-heading text-[#1A1A1A] block">1,482</span>
-                    <span className="text-[10px] text-[#8E8E93] font-medium">Total Users Managed</span>
-                  </div>
-                  <div className="p-2.5 bg-white border border-[#E7E4DF] rounded-xl text-center">
-                    <span className="text-lg font-black font-heading text-[#2A5C8A] block">5 Blocks</span>
-                    <span className="text-[10px] text-[#8E8E93] font-medium">Hostels Managed</span>
-                  </div>
-                  <div className="p-2.5 bg-white border border-[#E7E4DF] rounded-xl text-center">
-                    <span className="text-lg font-black font-heading text-[#059669] block">12</span>
-                    <span className="text-[10px] text-[#8E8E93] font-medium">Active Sessions</span>
-                  </div>
-                  <div className="p-2.5 bg-white border border-[#E7E4DF] rounded-xl text-center">
-                    <span className="text-lg font-black font-heading text-[#D97706] block">3</span>
-                    <span className="text-[10px] text-[#8E8E93] font-medium">Pending Approvals</span>
-                  </div>
+                  {profileStats.map((stat) => (
+                    <div key={stat.label} className="p-2.5 bg-white border border-[#E7E4DF] rounded-xl text-center">
+                      <span
+                        className="text-lg font-black font-heading block"
+                        style={{ color: stat.color || '#1A1A1A' }}
+                      >
+                        {stat.value}
+                      </span>
+                      <span className="text-[10px] text-[#8E8E93] font-medium">{stat.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -400,7 +465,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             {/* Toast Notification inside modal */}
             {editToast && (
               <div className="mb-3 p-2.5 bg-[#FEF9E7] border border-[#D97706]/30 rounded-xl text-[11px] text-[#D97706] font-bold text-center animate-fadeIn">
-                Root Profile edits require System Security Authorization.
+                Profile edits require System Security Authorization.
               </div>
             )}
 

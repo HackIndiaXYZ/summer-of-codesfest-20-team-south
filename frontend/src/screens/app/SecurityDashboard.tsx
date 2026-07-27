@@ -441,7 +441,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
       showToast({
         title: 'Input Empty',
         message: 'Please enter or scan a valid Pass ID (e.g., VP-1089 or WP-1082)',
-        type: 'warning',
+        type: 'info',
       });
       return;
     }
@@ -599,37 +599,54 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
   );
 
   return (
-    <div className="min-h-screen bg-[#FAF8F2] flex flex-col font-body text-[#1A1A1A] overflow-x-hidden">
-      {/* TOP BAR */}
-      <TopBar
-        currentPageTitle={getPageTitle()}
-        userName={userName}
-        userRole="Security Personnel"
-        avatarInitials="SK"
-        avatarColor="#2A5C8A"
-        hostelBlock="Main Gate"
-        roomNumber="SEC-014"
-        unreadCount={3}
-        showBackButton={activeRoute !== '/security/dashboard'}
-        onBack={() => setActiveRoute('/security/dashboard')}
-        onOpenAiHelper={() => setShowAiModal(true)}
-        onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+    <div className="min-h-screen bg-[#FAF8F2] text-[#1A1A1A] font-body">
+      {/* SIDEBAR — now a top-level sibling, fixed-positioned by the component itself */}
+      <Sidebar
+        activeRoute={activeRoute}
         onNavigate={(r) => setActiveRoute(r)}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        mobileOpen={mobileSidebarOpen}
+        onMobileClose={() => setMobileSidebarOpen(false)}
         onLogout={onLogout}
+        onOpenAiHelper={() => setShowAiModal(true)}
+        role="security"
       />
 
-      <div className="flex flex-1 overflow-hidden relative">
-        {/* SIDEBAR */}
-        <Sidebar
-          activeRoute={activeRoute}
-          onNavigate={(r) => setActiveRoute(r)}
-          isCollapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-          mobileOpen={mobileSidebarOpen}
-          onMobileClose={() => setMobileSidebarOpen(false)}
-          onLogout={onLogout}
+      {/* PAGE WRAPPER — reserves space for the fixed sidebar via padding-left,
+          so TopBar and content shift right instead of being covered by it */}
+      <div
+        className={`transition-all duration-300 min-h-screen flex flex-col ${
+          sidebarCollapsed ? 'md:pl-[80px]' : 'md:pl-[280px]'
+        }`}
+      >
+        {/* TOP BAR */}
+        <TopBar
+          currentPageTitle={getPageTitle()}
+          userName={userName}
+          userRole="Security Personnel"
+          avatarInitials="SK"
+          avatarColor="#2A5C8A"
+          hostelBlock="Main Gate"
+          roomNumber="SEC-014"
+          unreadCount={3}
+          showBackButton={activeRoute !== '/security/dashboard'}
+          onBack={() => setActiveRoute('/security/dashboard')}
           onOpenAiHelper={() => setShowAiModal(true)}
-          role="security"
+          onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+          onNavigate={(r) => setActiveRoute(r)}
+          onLogout={onLogout}
+          profileEmployeeId="SEC-014"
+          profileEmail="suresh.kumar@vaigai.edu"
+          profileAccessLevel="Gate Security Clearance"
+          profileOfficeLocation="Main Hostel Gate (#1)"
+          profilePrimaryCampus="Main Campus"
+          profileStats={[
+            { label: 'Visitors Cleared Today', value: '24', color: '#2E7D32' },
+            { label: 'Active Tech Passes', value: String(passes.length), color: '#2A5C8A' },
+            { label: 'Pending Visitors', value: String(visitorPasses.filter((v) => v.status === 'Pending').length), color: '#D97706' },
+            { label: 'Active SOS', value: String(sosAlerts.filter((s) => s.status === 'Active').length), color: '#D9534F' },
+          ]}
         />
 
         {/* MAIN CONTENT CANVAS */}
@@ -1106,7 +1123,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
                                     ? 'success'
                                     : item.status === 'Responding'
                                     ? 'warning'
-                                    : 'neutral'
+                                    : 'secondary'
                                 }
                                 size="sm"
                               >
@@ -1407,7 +1424,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
                             ? 'success'
                             : v.status === 'Pending'
                             ? 'warning'
-                            : 'neutral'
+                            : 'secondary'
                         }
                         size="sm"
                       >
@@ -1980,9 +1997,9 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
               <div className="space-y-4">
                 <div
                   className={`p-3 rounded-xl border flex items-center justify-between text-xs font-bold ${
-                    scannedResultModal.passData.extensionStatus === 'REQUESTED'
+                    scannedResultModal.passData.extensionStatus === 'Pending'
                       ? 'bg-[#FFF8E1] border-[#FFE082] text-[#F57F17]'
-                      : scannedResultModal.passData.extensionStatus === 'APPROVED'
+                      : scannedResultModal.passData.extensionStatus === 'Approved'
                       ? 'bg-[#E3F2FD] border-[#90CAF9] text-[#1976D2]'
                       : scannedResultModal.passData.status === 'EXPIRED'
                       ? 'bg-[#FFEBEE] border-[#FFCDD2] text-[#C62828]'
@@ -1992,9 +2009,9 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-current animate-ping" />
                     <span>
-                      {scannedResultModal.passData.extensionStatus === 'REQUESTED'
+                      {scannedResultModal.passData.extensionStatus === 'Pending'
                         ? '🟡 YELLOW — Extension Pending'
-                        : scannedResultModal.passData.extensionStatus === 'APPROVED'
+                        : scannedResultModal.passData.extensionStatus === 'Approved'
                         ? '🔵 BLUE — Extended Work Pass'
                         : scannedResultModal.passData.status === 'EXPIRED'
                         ? '🔴 RED — Pass Expired'

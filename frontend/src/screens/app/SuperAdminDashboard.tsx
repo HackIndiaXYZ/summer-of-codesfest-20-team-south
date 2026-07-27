@@ -128,15 +128,21 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
     { id: 'BKP-1085', date: '2026-07-21 02:00 AM', type: 'Automated Full Backup', status: 'Healthy', size: '1.38 GB', duration: '3m 18s' },
   ]);
   const [isBackupRunning, setIsBackupRunning] = useState(false);
+  const [backupProgress, setBackupProgress] = useState(0);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
 
   const handleRunManualBackup = () => {
     setIsBackupRunning(true);
-    showToast({
-      title: 'Backup Initialized',
-      message: 'Running cloud snapshot and database dump...',
-      type: 'info',
-    });
+    setBackupProgress(0);
+    showToast({ title: 'Backup Initialized', message: 'Running cloud snapshot and database dump...', type: 'info' });
+
+    const interval = setInterval(() => {
+      setBackupProgress((prev) => (prev >= 95 ? prev : prev + Math.floor(Math.random() * 12) + 5));
+    }, 300);
+
     setTimeout(() => {
+      clearInterval(interval);
+      setBackupProgress(100);
       setIsBackupRunning(false);
       const newBkp = {
         id: `BKP-${Math.floor(1100 + Math.random() * 900)}`,
@@ -146,13 +152,24 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
         size: '1.43 GB',
         duration: '1m 24s',
       };
-      setBackups([newBkp, ...backups]);
-      showToast({
-        title: 'Backup Successful ✅',
-        message: 'Snapshot created and verified in cloud cold vault.',
-        type: 'success',
-      });
+      setBackups((prev) => [newBkp, ...prev]);
+      showToast({ title: 'Backup Successful ✅', message: 'Snapshot created and verified in cloud cold vault.', type: 'success' });
+      setTimeout(() => setBackupProgress(0), 800);
     }, 2500);
+  };
+
+  const handleRestoreBackup = (bkp: typeof backups[0]) => {
+    setRestoringId(bkp.id);
+    showToast({ title: 'Restore Started', message: `Spinning up sandbox environment for ${bkp.id}...`, type: 'info' });
+
+    setTimeout(() => {
+      showToast({ title: 'Restore In Progress', message: `Rehydrating database from ${bkp.id} (${bkp.size})...`, type: 'info' });
+    }, 1200);
+
+    setTimeout(() => {
+      setRestoringId(null);
+      showToast({ title: 'Restore Complete ✅', message: `Sandbox restored from ${bkp.id}. Verify data before promoting.`, type: 'success' });
+    }, 3200);
   };
 
   // ==================== 3. SYSTEM HEALTH MONITOR STATE ====================
@@ -168,13 +185,14 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
 
   // ==================== 4. HOSTEL COMPARISON DATA ====================
   const hostelDataList = [
-    { name: 'Vaigai Hostel', capacity: 200, occupied: 190, occupancyPct: 95, complaints: 12, avgResolutionHours: 2.4, sosCount: 1, visitorCount: 38, maintenanceRequests: 7, securityIncidents: 0, warden: 'Dr. Priya Raman' },
-    { name: 'Kaveri Hostel', capacity: 180, occupied: 158, occupancyPct: 88, complaints: 8, avgResolutionHours: 1.8, sosCount: 0, visitorCount: 24, maintenanceRequests: 4, securityIncidents: 0, warden: 'Dr. S. Vignesh' },
-    { name: 'Tamirabarani Hostel', capacity: 220, occupied: 202, occupancyPct: 92, complaints: 15, avgResolutionHours: 3.1, sosCount: 0, visitorCount: 42, maintenanceRequests: 9, securityIncidents: 1, warden: 'Dr. Anita Roy' },
-    { name: 'Bhavani Hostel', capacity: 160, occupied: 144, occupancyPct: 90, complaints: 5, avgResolutionHours: 2.0, sosCount: 0, visitorCount: 19, maintenanceRequests: 3, securityIncidents: 0, warden: 'Prof. K. Sundar' },
-    { name: 'Palar Hostel', capacity: 200, occupied: 170, occupancyPct: 85, complaints: 9, avgResolutionHours: 2.8, sosCount: 0, visitorCount: 28, maintenanceRequests: 5, securityIncidents: 0, warden: 'Dr. M. Lakshmi' },
+    { name: 'Vaigai Hostel', gender: 'Boys', floors: 9, capacity: 340, occupied: 322, occupancyPct: 95, complaints: 12, avgResolutionHours: 2.4, sosCount: 1, visitorCount: 38, maintenanceRequests: 7, securityIncidents: 0, warden: 'Dr. Priya Raman' },
+    { name: 'Cauvery Hostel', gender: 'Girls', floors: 9, capacity: 320, occupied: 282, occupancyPct: 88, complaints: 8, avgResolutionHours: 1.8, sosCount: 0, visitorCount: 24, maintenanceRequests: 4, securityIncidents: 0, warden: 'Dr. S. Vignesh' },
+    { name: 'Thamirabarani Hostel', gender: 'Boys', floors: 5, capacity: 190, occupied: 175, occupancyPct: 92, complaints: 15, avgResolutionHours: 3.1, sosCount: 0, visitorCount: 42, maintenanceRequests: 9, securityIncidents: 1, warden: 'Dr. Anita Roy' },
+    { name: 'Bhavani Hostel', gender: 'Boys', floors: 3, capacity: 120, occupied: 108, occupancyPct: 90, complaints: 5, avgResolutionHours: 2.0, sosCount: 0, visitorCount: 19, maintenanceRequests: 3, securityIncidents: 0, warden: 'Prof. K. Sundar' },
+    { name: 'Palar Hostel', gender: 'Boys', floors: 5, capacity: 190, occupied: 162, occupancyPct: 85, complaints: 9, avgResolutionHours: 2.8, sosCount: 0, visitorCount: 28, maintenanceRequests: 5, securityIncidents: 0, warden: 'Dr. M. Lakshmi' },
+    { name: 'Amaravathi Hostel', gender: 'Girls', floors: 8, capacity: 300, occupied: 279, occupancyPct: 93, complaints: 6, avgResolutionHours: 2.1, sosCount: 0, visitorCount: 21, maintenanceRequests: 4, securityIncidents: 0, warden: 'Dr. Kavitha Sundaram' },
+    { name: 'Pothigai Hostel', gender: 'Boys', floors: 12, capacity: 440, occupied: 396, occupancyPct: 90, complaints: 18, avgResolutionHours: 2.9, sosCount: 0, visitorCount: 50, maintenanceRequests: 11, securityIncidents: 0, warden: 'Prof. R. Elangovan' },
   ];
-
   // ==================== 5. PERFORMANCE LEADERBOARD ====================
   const leaderboardData = {
     wardens: [
@@ -193,9 +211,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
       { rank: 3, medal: '🥉', name: 'R. Arumugam', role: 'Patrol Guard', hostel: 'Perimeter Patrol', score: '96.0%', trend: '+0.5%', resolutionTime: 'Instant', avatarColor: '#2A5C8A' },
     ],
     hostels: [
-      { rank: 1, medal: '🥇', name: 'Vaigai Hostel', role: 'Block A & B', hostel: '200 Residents', score: '4.9 / 5.0 ⭐', trend: 'Occupancy 95%', resolutionTime: '2.4 hrs', avatarColor: '#996E7D' },
-      { rank: 2, medal: '🥈', name: 'Kaveri Hostel', role: 'Block C', hostel: '180 Residents', score: '4.8 / 5.0 ⭐', trend: 'Occupancy 88%', resolutionTime: '1.8 hrs', avatarColor: '#2A5C8A' },
-      { rank: 3, medal: '🥉', name: 'Bhavani Hostel', role: 'Block D', hostel: '160 Residents', score: '4.6 / 5.0 ⭐', trend: 'Occupancy 90%', resolutionTime: '2.0 hrs', avatarColor: '#059669' },
+      { rank: 1, medal: '🥇', name: 'Vaigai Hostel', role: 'Boys • 9 Floors', hostel: '340 Residents', score: '4.9 / 5.0 ⭐', trend: 'Occupancy 95%', resolutionTime: '2.4 hrs', avatarColor: '#996E7D' },
+      { rank: 2, medal: '🥈', name: 'Amaravathi Hostel', role: 'Girls • 8 Floors', hostel: '300 Residents', score: '4.8 / 5.0 ⭐', trend: 'Occupancy 93%', resolutionTime: '2.1 hrs', avatarColor: '#2A5C8A' },
+      { rank: 3, medal: '🥉', name: 'Bhavani Hostel', role: 'Boys • 3 Floors', hostel: '120 Residents', score: '4.6 / 5.0 ⭐', trend: 'Occupancy 90%', resolutionTime: '2.0 hrs', avatarColor: '#059669' },
     ],
   };
 
@@ -274,9 +292,28 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   });
 
   const handleExportAuditCSV = () => {
+    const headers = ['Event ID', 'Timestamp', 'User', 'Role', 'Hostel', 'Action', 'IP Address', 'Severity'];
+    const rows = filteredAuditLogs.map((log) => [
+      log.id, log.time, log.user, log.role, log.hostel, log.action, log.ip, log.severity,
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `audit_logs_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
     showToast({
       title: 'Audit Report Exported',
-      message: 'Downloaded enterprise audit history report CSV file.',
+      message: `Downloaded ${filteredAuditLogs.length} audit log entries as CSV.`,
       type: 'success',
     });
   };
@@ -412,10 +449,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                     </span>
                   </div>
                   <div className="font-heading text-3xl font-extrabold text-[#1A1A1A]">
-                    5 Blocks
+                    7 Blocks
                   </div>
                   <p className="text-xs text-[#666666] font-medium mt-1">
-                    932 total rooms • 91% occupancy
+                    1,900 total rooms • 91% occupancy
                   </p>
                 </Card>
 
@@ -465,7 +502,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                     { title: 'Access Control Center', desc: 'Global role login toggles, 2FA policies & active session logs.', route: '/superadmin/access-control', icon: Lock, color: '#2A5C8A', badge: 'Security' },
                     { title: 'Backup & Disaster Recovery', desc: 'Cloud snapshot dumps, automated schedules & RTO recovery.', route: '/superadmin/backup', icon: HardDrive, color: '#666666', badge: 'Vault' },
                     { title: 'System Health Monitor', desc: 'Real-time microservice status, latency, CPU/memory telemetry.', route: '/superadmin/system-health', icon: Activity, color: '#059669', badge: 'Live' },
-                    { title: 'Cross-Hostel Comparison', desc: 'Benchmark metrics, occupancy ratios & complaint resolution across all 5 blocks.', route: '/superadmin/hostel-comparison', icon: BarChart3, color: '#E65100', badge: 'Analytics' },
+                    { title: 'Cross-Hostel Comparison', desc: 'Benchmark metrics, occupancy ratios & complaint resolution across all 7 blocks.', route: '/superadmin/hostel-comparison', icon: BarChart3, color: '#E65100', badge: 'Analytics' },
                     { title: 'Staff Leaderboard', desc: 'Top wardens, fastest technicians & highest-rated hostels with medals.', route: '/superadmin/leaderboard', icon: Trophy, color: '#D97706', badge: 'Awards' },
                     { title: 'System Alert Center', desc: 'Real-time alert dispatch, priority filtering & automated resolution.', route: '/superadmin/alerts', icon: AlertCircle, color: '#D9534F', badge: 'Alerts' },
                     { title: 'Campus Overview', desc: 'Interactive block cards & detailed warden slide-over inspection panel.', route: '/superadmin/campus', icon: Building, color: '#996E7D', badge: 'Map' },
@@ -763,14 +800,22 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
+                  {isBackupRunning && (
+                    <div className="w-40 h-2 bg-[#E7E4DF] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#996E7D] transition-all duration-300"
+                        style={{ width: `${backupProgress}%` }}
+                      />
+                    </div>
+                  )}
                   <Button
                     variant="primary"
                     disabled={isBackupRunning}
                     leftIcon={<HardDrive className="w-4 h-4" />}
                     onClick={handleRunManualBackup}
                   >
-                    {isBackupRunning ? 'Running Backup...' : 'Run Manual Backup'}
+                    {isBackupRunning ? `Backing Up… ${backupProgress}%` : 'Run Manual Backup'}
                   </Button>
                 </div>
               </div>
@@ -848,15 +893,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                             <Button
                               variant="secondary"
                               size="sm"
-                              onClick={() => {
-                                showToast({
-                                  title: 'Restore Initialized',
-                                  message: `Restoring snapshot ${bkp.id} to sandbox staging server...`,
-                                  type: 'info',
-                                });
-                              }}
+                              disabled={restoringId !== null}
+                              onClick={() => handleRestoreBackup(bkp)}
                             >
-                              Restore
+                              {restoringId === bkp.id ? 'Restoring…' : 'Restore'}
                             </Button>
                             <Button
                               variant="text"
@@ -977,7 +1017,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                   Cross-Hostel Performance Comparison
                 </h1>
                 <p className="font-body text-xs text-[#666666] mt-1">
-                  Side-by-side benchmark analytics across Vaigai, Kaveri, Tamirabarani, Bhavani, and Palar hostels.
+                  Side-by-side benchmark analytics across all 7 hostel blocks: Vaigai, Cauvery, Thamirabarani, Bhavani, Palar, Amaravathi, and Pothigai.
                 </p>
               </div>
 
@@ -1012,6 +1052,8 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                     <thead>
                       <tr className="border-b border-[#E7E4DF] text-[#8E8E93] uppercase tracking-wider font-heading sticky top-0 bg-white">
                         <th className="pb-3 font-bold">Hostel Block</th>
+                        <th className="pb-3 font-bold">Gender</th>
+                        <th className="pb-3 font-bold">Floors</th>
                         <th className="pb-3 font-bold">Warden</th>
                         <th className="pb-3 font-bold">Occupancy</th>
                         <th className="pb-3 font-bold">Complaints</th>
@@ -1025,6 +1067,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                       {hostelDataList.map((h) => (
                         <tr key={h.name} className="hover:bg-[#FAF8F2]">
                           <td className="py-3 font-extrabold text-[#1A1A1A]">{h.name}</td>
+                          <td className="py-3">
+                            <Badge variant={h.gender === 'Girls' ? 'danger' : 'primary'} size="sm">{h.gender}</Badge>
+                          </td>
+                          <td className="py-3 text-[#666666]">{h.floors}</td>
                           <td className="py-3 text-[#666666]">{h.warden}</td>
                           <td className="py-3 font-bold text-[#996E7D]">
                             {h.occupied}/{h.capacity} ({h.occupancyPct}%)
@@ -1326,6 +1372,11 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                       <Badge variant="primary" size="sm">{h.occupancyPct}% Occupied</Badge>
                     </div>
 
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge variant={h.gender === 'Girls' ? 'danger' : 'secondary'} size="sm">{h.gender}</Badge>
+                      <span className="text-[11px] text-[#8E8E93] font-medium">{h.floors} Floors</span>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3 text-xs pt-2">
                       <div className="p-2.5 rounded-xl bg-[#FAF8F2]">
                         <span className="text-[#8E8E93] block">Active Complaints</span>
@@ -1376,6 +1427,13 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                     </div>
 
                     <div className="space-y-4 text-xs">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={selectedHostelPanel.gender === 'Girls' ? 'danger' : 'secondary'} size="sm">
+                          {selectedHostelPanel.gender}
+                        </Badge>
+                        <span className="text-[11px] text-[#8E8E93] font-medium">{selectedHostelPanel.floors} Floors</span>
+                      </div>
+
                       <div className="p-4 rounded-2xl bg-[#F5EFF2] border border-[#996E7D]/20">
                         <span className="text-[#8E8E93] block">Assigned Chief Warden</span>
                         <span className="font-heading text-base font-extrabold text-[#1A1A1A] block mt-0.5">
@@ -1816,7 +1874,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                         <label className="font-bold text-[#1A1A1A] block mb-1">Active Blocks</label>
                         <input
                           type="text"
-                          defaultValue="5 Hostels"
+                          defaultValue="7 Hostels"
                           className="w-full p-2.5 rounded-xl border border-[#E7E4DF] bg-[#FAF8F2] text-[#1A1A1A] outline-none font-medium"
                         />
                       </div>

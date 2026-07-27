@@ -1,8 +1,7 @@
 import React from 'react';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'text' | 'ai' | 'google';
-  size?: 'sm' | 'md' | 'lg';
+variant?: 'primary' | 'secondary' | 'outline' | 'text' | 'ai' | 'google' | 'danger';  size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -32,7 +31,8 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variantStyles = {
     primary: "bg-[#996E7D] hover:bg-[#855B6A] text-white shadow-sm hover:shadow focus:ring-[#996E7D]",
-    secondary: "bg-[#9EB8D2] hover:bg-[#89A4C0] text-[#1A1A1A] focus:ring-[#9EB8D2]",
+danger: "bg-[#D9534F] hover:bg-[#C9302C] text-white shadow-sm hover:shadow focus:ring-[#D9534F]",
+secondary: "bg-[#9EB8D2] hover:bg-[#89A4C0] text-[#1A1A1A] focus:ring-[#9EB8D2]",
     outline: "bg-transparent border border-[#E7E4DF] hover:border-[#996E7D] text-[#1A1A1A] hover:bg-[#FAF8F2] focus:ring-[#996E7D]",
     text: "bg-transparent text-[#666666] hover:text-[#1A1A1A] hover:bg-black/5 focus:ring-gray-400",
     ai: "bg-[#A73FD3] hover:bg-[#9233BC] text-white shadow-sm focus:ring-[#A73FD3]",
