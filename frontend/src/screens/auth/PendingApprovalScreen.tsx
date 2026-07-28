@@ -19,8 +19,6 @@ export const PendingApprovalScreen: React.FC<PendingApprovalScreenProps> = ({
   return (
     <div className="min-h-[calc(100vh-72px)] bg-[#FAF8F2] flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-lg text-center">
-        
-        {/* Navigation Bar */}
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => onNavigate('login')}
@@ -31,45 +29,34 @@ export const PendingApprovalScreen: React.FC<PendingApprovalScreenProps> = ({
           </button>
         </div>
 
-        {/* Brand Header */}
         <div className="flex justify-center mb-6 cursor-pointer" onClick={() => onNavigate('landing')}>
           <Logo variant="navbar" size="lg" />
         </div>
 
-        {/* Card */}
         <Card className="shadow-[0_12px_40px_-12px_rgba(0,0,0,0.08)] border border-[#E7E4DF] p-6 sm:p-8 relative overflow-hidden">
-          
-          {/* Subtle Top Accent Bar */}
           <div className="absolute top-0 left-0 right-0 h-2 bg-[#F4B400]" />
 
-          {/* Large Verification Graphic / Illustration */}
           <div className="my-6 relative inline-flex items-center justify-center">
-            {/* Outer Pulsing Glow */}
             <div className="w-24 h-24 rounded-full bg-[#FFF8E1] border-2 border-[#F4B400]/40 flex items-center justify-center animate-pulse">
               <div className="w-16 h-16 rounded-full bg-[#F4B400] text-white flex items-center justify-center shadow-md">
                 <Clock className="w-8 h-8" />
               </div>
             </div>
-
-            {/* Floating Shield Status Badge */}
             <div className="absolute -bottom-1 -right-1 bg-white p-1.5 rounded-full border border-[#E7E4DF] shadow-xs">
               <ShieldAlert className="w-5 h-5 text-[#D97706]" />
             </div>
           </div>
 
-          {/* Status Badge */}
           <div className="mb-4">
             <Badge variant="warning" size="md">
               <Clock className="w-3.5 h-3.5 mr-1" /> Request Under Review
             </Badge>
           </div>
 
-          {/* Title */}
           <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-[#1A1A1A] tracking-tight mb-3">
             Account Pending Verification
           </h1>
 
-          {/* Messages from Specification */}
           <div className="space-y-3 font-body text-sm sm:text-base text-[#666666] leading-relaxed max-w-md mx-auto mb-8">
             <p className="font-semibold text-[#1A1A1A]">
               Your account has been created successfully.
@@ -82,7 +69,6 @@ export const PendingApprovalScreen: React.FC<PendingApprovalScreenProps> = ({
             </p>
           </div>
 
-          {/* Details Summary Block */}
           <div className="bg-[#FAF8F2] p-4 rounded-[12px] border border-[#E7E4DF] text-left text-xs mb-8 space-y-2">
             <div className="flex items-center justify-between text-[#666666]">
               <span className="flex items-center gap-1.5"><Building className="w-3.5 h-3.5 text-[#996E7D]" /> Requested Role:</span>
@@ -98,7 +84,6 @@ export const PendingApprovalScreen: React.FC<PendingApprovalScreenProps> = ({
             </div>
           </div>
 
-          {/* Action Button */}
           <Button
             variant="primary"
             fullWidth
@@ -108,14 +93,11 @@ export const PendingApprovalScreen: React.FC<PendingApprovalScreenProps> = ({
           >
             Return to Login
           </Button>
-
         </Card>
 
-        {/* Footer info */}
         <p className="font-body text-xs text-[#8E8E93] mt-6">
           Need urgent authorization? Contact campus IT helpdesk at <span className="underline">support@college.edu</span>
         </p>
-
       </div>
     </div>
   );

@@ -1794,8 +1794,7 @@ export const WardenDashboard: React.FC<WardenDashboardProps> = ({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h1 className="font-heading text-2xl font-black text-[#1A1A1A]">
-                    Digital Work Pass Extensions ({passes.filter((p) => p.extensionStatus === 'REQUESTED').length} Pending)
-                  </h1>
+Digital Work Pass Extensions ({passes.filter((p) => p.extensionStatus === 'Pending').length} Pending)                  </h1>
                   <p className="font-body text-xs text-[#666666]">
                     Approve or manage extra time requests submitted by maintenance technicians in the field
                   </p>
@@ -1841,17 +1840,17 @@ export const WardenDashboard: React.FC<WardenDashboardProps> = ({
                       <div>
                         <span className="text-[#8E8E93] block">Extension Status:</span>
                         <Badge
-                          variant={
-                            pass.extensionStatus === 'REQUESTED'
-                              ? 'warning'
-                              : pass.extensionStatus === 'APPROVED'
-                              ? 'success'
-                              : 'neutral'
-                          }
-                          size="sm"
-                        >
-                          {pass.extensionStatus === 'REQUESTED' ? 'Extension Requested (+30 mins)' : pass.extensionStatus}
-                        </Badge>
+  variant={
+    pass.extensionStatus === 'Pending'
+      ? 'warning'
+      : pass.extensionStatus === 'Approved'
+      ? 'success'
+      : 'secondary'
+  }
+  size="sm"
+>
+  {pass.extensionStatus === 'Pending' ? 'Extension Requested (+30 mins)' : pass.extensionStatus}
+</Badge>
                       </div>
                     </div>
 
@@ -1862,7 +1861,7 @@ export const WardenDashboard: React.FC<WardenDashboardProps> = ({
                     )}
 
                     <div className="flex items-center justify-end gap-3 pt-1">
-                      {pass.extensionStatus === 'REQUESTED' ? (
+                      {pass.extensionStatus === 'Pending' ? (
                         <>
                           <Button
                             variant="secondary"

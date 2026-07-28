@@ -25,6 +25,19 @@ export interface SignupHostelScreenProps {
   onCompleteSignup: (role: UserRole, hostelData: SignupHostelData) => void;
 }
 
+// Kept in sync with the 7-hostel roster used in SuperAdminDashboard.tsx's
+// `hostelDataList` (Vaigai, Cauvery, Thamirabarani, Bhavani, Palar, Amaravathi, Pothigai).
+// value = lowercase slug used as the Firestore field value; label = what's shown here.
+const HOSTEL_BLOCK_OPTIONS = [
+  { label: 'Vaigai Hostel (Boys • 9 Floors)', value: 'vaigai' },
+  { label: 'Cauvery Hostel (Girls • 9 Floors)', value: 'cauvery' },
+  { label: 'Thamirabarani Hostel (Boys • 5 Floors)', value: 'thamirabarani' },
+  { label: 'Bhavani Hostel (Boys • 3 Floors)', value: 'bhavani' },
+  { label: 'Palar Hostel (Boys • 5 Floors)', value: 'palar' },
+  { label: 'Amaravathi Hostel (Girls • 8 Floors)', value: 'amaravathi' },
+  { label: 'Pothigai Hostel (Boys • 12 Floors)', value: 'pothigai' },
+];
+
 export const SignupHostelScreen: React.FC<SignupHostelScreenProps> = ({
   onNavigate,
   selectedRole,
@@ -74,7 +87,10 @@ export const SignupHostelScreen: React.FC<SignupHostelScreenProps> = ({
 
     setIsLoading(true);
 
-    // Simulate registration process
+    // NOTE: this setTimeout was standing in for a real network call.
+    // Once Firebase is wired, onCompleteSignup (passed down from App.tsx)
+    // now calls the real signUp() service and returns a Promise, so this
+    // artificial delay can be removed — isLoading is driven by that await instead.
     setTimeout(() => {
       setIsLoading(false);
       onCompleteSignup(selectedRole, formData);
@@ -130,13 +146,7 @@ export const SignupHostelScreen: React.FC<SignupHostelScreenProps> = ({
               error={errors.hostelBlock}
               placeholder="Select Hostel Block"
               leftIcon={<Building2 className="w-4 h-4 text-[#8E8E93]" />}
-              options={[
-                { label: 'Vaigai Block A (Senior Resident)', value: 'vaigai-block-a' },
-                { label: 'Kaveri Block B (Junior Resident)', value: 'kaveri-block-b' },
-                { label: 'Bhavani Block C (Postgraduate)', value: 'bhavani-block-c' },
-                { label: 'Amaravathi Block D (International)', value: 'amaravathi-block-d' },
-                { label: 'Tamiraparani Block E (Staff Quarter)', value: 'tamiraparani-block-e' },
-              ]}
+              options={HOSTEL_BLOCK_OPTIONS}
               required
             />
 

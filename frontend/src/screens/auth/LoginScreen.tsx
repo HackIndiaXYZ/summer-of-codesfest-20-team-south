@@ -8,6 +8,9 @@ import Divider from '../../components/common/Divider';
 import Logo from '../../components/common/Logo';
 import Snackbar from '../../components/common/Snackbar';
 import { isValidEmail } from '../../utils/helpers/validators';
+import { useAuth } from '../../context/AuthContext';
+import { logInWithGoogle } from '../../services/authService';
+import { UserProfile } from '../../types/auth';
 
 export interface LoginScreenProps {
   onNavigate: (route: string) => void;
@@ -15,6 +18,8 @@ export interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onNavigate, onLoginSuccess }) => {
+  const { login } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -24,7 +29,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onNavigate, onLoginSuc
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Decides where a signed-in profile should land, based on real
+  // Firestore data (not email keyword guessing).
+  const routeForProfile = (profile: UserProfile): string => {
+    if (profile.status === 'rejected') return 'login';
+    if (profile.status === 'pending') return 'pending-approval';
+    if (profile.isAdmin) return 'superadmin-dashboard';
+    return `${profile.role}-dashboard`;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let hasError = false;
 
@@ -51,33 +65,79 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onNavigate, onLoginSuc
     if (hasError) return;
 
     setIsLoading(true);
-    // Simulate login API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const profile = await login(email, password);
+      onLoginSuccess?.(email);
+
+      if (profile.status === 'rejected') {
+        setSnackbar({
+          isOpen: true,
+          message: 'Your account request was not approved. Contact the campus IT helpdesk for details.',
+          type: 'error',
+        });
+        return;
+      }
+
       setSnackbar({
         isOpen: true,
         message: 'Successfully authenticated. Welcome back to Project Vaigai!',
         type: 'success',
       });
-      if (onLoginSuccess) {
-        onLoginSuccess(email);
-      }
-    }, 1000);
+      onNavigate(routeForProfile(profile));
+    } catch (err: any) {
+      setPasswordError('Incorrect email or password');
+      setSnackbar({
+        isOpen: true,
+        message: err?.message ?? 'Could not sign in. Please try again.',
+        type: 'error',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const { profile } = await logInWithGoogle();
+
+      if (!profile) {
+        // First-time Google sign-in: no Firestore profile yet, so this
+        // person still needs to pick a role and finish onboarding.
+        setSnackbar({
+          isOpen: true,
+          message: 'Almost there — pick a role to finish setting up your account.',
+          type: 'info',
+        });
+        onNavigate('role-selection');
+        return;
+      }
+
+      if (profile.status === 'rejected') {
+        setSnackbar({
+          isOpen: true,
+          message: 'Your account request was not approved. Contact the campus IT helpdesk for details.',
+          type: 'error',
+        });
+        return;
+      }
+
       setSnackbar({
         isOpen: true,
         message: 'Google Single Sign-On successful.',
         type: 'success',
       });
-      if (onLoginSuccess) {
-        onLoginSuccess('student@college.edu');
-      }
-    }, 800);
+      onLoginSuccess?.(profile.email);
+      onNavigate(routeForProfile(profile));
+    } catch (err: any) {
+      setSnackbar({
+        isOpen: true,
+        message: err?.message ?? 'Google sign-in failed. Please try again.',
+        type: 'error',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleForgotPassword = (e: React.FormEvent) => {
