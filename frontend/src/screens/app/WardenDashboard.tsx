@@ -735,6 +735,7 @@ export const WardenDashboard: React.FC<WardenDashboardProps> = ({
       >
         {/* Top Header */}
         <TopBar
+          role="warden"
           currentPageTitle={
             activeRoute === '/warden/dashboard'
               ? 'Warden Dashboard'
@@ -742,10 +743,12 @@ export const WardenDashboard: React.FC<WardenDashboardProps> = ({
               ? 'Gate QR Scanner'
               : activeRoute.replace('/warden/', '').replace('-', ' ').toUpperCase()
           }
-          userRole="Hostel Warden"
+          userRole={profile.role}
           userName={profile.name}
           avatarInitials="WA"
           avatarColor="#2A5C8A"
+          hostelBlock={profile.hostel}
+          roomNumber="Campus Block A"
           unreadCount={4}
           showBackButton={activeRoute !== '/warden/dashboard'}
           onBack={() => setActiveRoute('/warden/dashboard')}
@@ -753,6 +756,21 @@ export const WardenDashboard: React.FC<WardenDashboardProps> = ({
           onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
           onNavigate={(r) => setActiveRoute(r)}
           onLogout={onLogout}
+          // FIX: these were missing entirely, so the Profile Overview modal
+          // was silently showing TopBar's hardcoded Super Admin fallback
+          // values (SA-9001 / superadmin@vaigai.edu.in) instead of the
+          // Warden's real details from `profile` state above.
+          profileEmployeeId={profile.empId}
+          profileEmail={profile.email}
+          profileAccessLevel={profile.role}
+          profileOfficeLocation={profile.office}
+          profilePrimaryCampus={profile.hostel}
+          profileStats={[
+            { label: 'Pending Complaints', value: String(complaints.filter((c) => c.status === 'Pending').length), color: '#D9534F' },
+            { label: 'Active Maintenance', value: String(staffList.filter((s) => s.status === 'Active').length), color: '#2A5C8A' },
+            { label: "Today's Visitors", value: String(visitors.length), color: '#996E7D' },
+            { label: 'Open SOS Alerts', value: String(sosAlerts.filter((s) => s.status === 'Active').length), color: '#D9534F' },
+          ]}
         />
 
         {/* Dynamic Route Content */}
@@ -1046,7 +1064,7 @@ export const WardenDashboard: React.FC<WardenDashboardProps> = ({
 
                               <td className="p-3.5">
                                 <Badge
-                                  variant={item.status === 'In Progress' ? 'warning' : item.status === 'Assigned' ? 'primary' : 'neutral'}
+                                  variant={item.status === 'In Progress' ? 'warning' : item.status === 'Assigned' ? 'primary' : 'secondary'}
                                   size="sm"
                                 >
                                   {item.status}
@@ -1119,7 +1137,7 @@ export const WardenDashboard: React.FC<WardenDashboardProps> = ({
                           </div>
 
                           <Badge
-                            variant={item.status === 'Approved' ? 'success' : item.status === 'Rejected' ? 'danger' : 'neutral'}
+                            variant={item.status === 'Approved' ? 'success' : item.status === 'Rejected' ? 'danger' : 'secondary'}
                             size="sm"
                           >
                             {item.status}
@@ -1334,7 +1352,7 @@ export const WardenDashboard: React.FC<WardenDashboardProps> = ({
                         </Badge>
 
                         <Badge
-                          variant={item.status === 'Resolved' ? 'success' : item.status === 'In Progress' ? 'warning' : 'neutral'}
+                          variant={item.status === 'Resolved' ? 'success' : item.status === 'In Progress' ? 'warning' : 'secondary'}
                           size="sm"
                         >
                           {item.status}
@@ -1705,7 +1723,7 @@ export const WardenDashboard: React.FC<WardenDashboardProps> = ({
                         </div>
                       </div>
 
-                      <Badge variant={staff.status === 'Active' ? 'success' : 'neutral'} size="sm">
+                      <Badge variant={staff.status === 'Active' ? 'success' : 'secondary'} size="sm">
                         {staff.status}
                       </Badge>
                     </div>
@@ -2495,7 +2513,7 @@ export const WardenDashboard: React.FC<WardenDashboardProps> = ({
             <div className="space-y-3 text-xs text-[#1A1A1A]">
               <div className="flex items-center justify-between">
                 <span>Priority: <Badge variant={selectedComplaint.priority === 'High' ? 'danger' : 'warning'}>{selectedComplaint.priority}</Badge></span>
-                <span>Status: <Badge variant={selectedComplaint.status === 'Resolved' ? 'success' : 'neutral'}>{selectedComplaint.status}</Badge></span>
+                <span>Status: <Badge variant={selectedComplaint.status === 'Resolved' ? 'success' : 'outline'}>{selectedComplaint.status}</Badge></span>
               </div>
 
               <div className="p-3 rounded-xl bg-[#FAF8F2] border border-[#E7E4DF] space-y-1">

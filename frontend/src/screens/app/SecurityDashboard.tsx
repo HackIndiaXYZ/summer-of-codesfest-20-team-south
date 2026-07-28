@@ -636,6 +636,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
           onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
           onNavigate={(r) => setActiveRoute(r)}
           onLogout={onLogout}
+          role="security"
           profileEmployeeId="SEC-014"
           profileEmail="suresh.kumar@vaigai.edu"
           profileAccessLevel="Gate Security Clearance"

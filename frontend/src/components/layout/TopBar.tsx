@@ -33,6 +33,7 @@ export interface ProfileStat {
 
 export interface TopBarProps {
   currentPageTitle: string;
+  role: 'superadmin' | 'warden' | 'maintenance' | 'security' | 'resident';
   userName?: string;
   userRole?: string;
   avatarInitials?: string;
@@ -57,6 +58,7 @@ export interface TopBarProps {
 
 export const TopBar: React.FC<TopBarProps> = ({
   currentPageTitle,
+  role,
   userName = 'Super Administrator',
   userRole = 'Super Administrator',
   avatarInitials = 'SA',
@@ -94,7 +96,12 @@ export const TopBar: React.FC<TopBarProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  const isSuperAdmin = userRole.toLowerCase().includes('super') || userRole.toLowerCase().includes('admin');
+  // Bug fix #3: routing previously guessed the portal from the display label
+  // (userRole.toLowerCase().includes('warden') etc). That's fragile — a display
+  // label like "Assistant Warden" or a renamed title could silently misroute.
+  // Routing now comes straight from the explicit `role` prop; `userRole` stays
+  // purely cosmetic (the text shown next to the avatar).
+  const isSuperAdmin = role === 'superadmin';
 
   // Close profile dropdown on outside click
   useEffect(() => {
@@ -127,44 +134,20 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   const handleProfileClick = () => {
     setDropdownOpen(false);
-    if (isSuperAdmin) {
-      onNavigate('/superadmin/profile');
-    } else if (userRole.toLowerCase().includes('warden')) {
-      onNavigate('/warden/profile');
-    } else if (userRole.toLowerCase().includes('maintenance')) {
-      onNavigate('/maintenance/profile');
-    } else if (userRole.toLowerCase().includes('security')) {
-      onNavigate('/security/profile');
-    } else {
-      onNavigate('/resident/profile');
-    }
+    onNavigate(`/${role}/profile`);
   };
 
   const handleSettingsClick = () => {
     setDropdownOpen(false);
-    if (isSuperAdmin) {
-      onNavigate('/superadmin/settings');
-    } else if (userRole.toLowerCase().includes('warden')) {
-      onNavigate('/warden/settings');
-    } else if (userRole.toLowerCase().includes('maintenance')) {
-      onNavigate('/maintenance/settings');
-    } else if (userRole.toLowerCase().includes('security')) {
-      onNavigate('/security/settings');
-    } else {
-      onNavigate('/resident/settings');
-    }
+    onNavigate(`/${role}/settings`);
   };
 
-  // Bug fix #2: notification bell only knew 'superadmin' vs a resident fallback.
-  // Every other role (security, warden, maintenance) landed on a route that
-  // doesn't exist in their dashboard. Route properly by role, same pattern
-  // as handleProfileClick / handleSettingsClick above.
+  // Bug fix #2: notification bell only knew 'superadmin' vs a resident fallback,
+  // then later guessed off the display label. Now it routes off the explicit
+  // `role` prop directly, same pattern as handleProfileClick/handleSettingsClick.
   const getNotificationsRoute = () => {
-    if (isSuperAdmin) return '/superadmin/alerts';
-    if (userRole.toLowerCase().includes('warden')) return '/warden/notifications';
-    if (userRole.toLowerCase().includes('maintenance')) return '/maintenance/notifications';
-    if (userRole.toLowerCase().includes('security')) return '/security/notifications';
-    return '/resident/notifications';
+    if (role === 'superadmin') return '/superadmin/alerts';
+    return `/${role}/notifications`;
   };
 
   return (

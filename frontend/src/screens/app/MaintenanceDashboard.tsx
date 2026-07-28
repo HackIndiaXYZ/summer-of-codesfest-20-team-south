@@ -525,10 +525,13 @@ export const MaintenanceDashboard: React.FC<MaintenanceDashboardProps> = ({
               ? 'Maintenance Dashboard'
               : activeRoute.replace('/maintenance/', '').replace('-', ' ').toUpperCase()
           }
+          role="maintenance"
           userRole="Electrician"
           userName={profile.name}
           avatarInitials="MK"
           avatarColor="#996E7D"
+          hostelBlock="Maintenance Department"
+          roomNumber="All Blocks Access"
           unreadCount={notifications.filter((n) => n.unread).length}
           showBackButton={activeRoute !== '/maintenance/dashboard'}
           onBack={() => setActiveRoute('/maintenance/dashboard')}
@@ -536,6 +539,27 @@ export const MaintenanceDashboard: React.FC<MaintenanceDashboardProps> = ({
           onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
           onNavigate={(r) => setActiveRoute(r)}
           onLogout={onLogout}
+          profileEmployeeId={profile.empId}
+          profileEmail={profile.email}
+          profileAccessLevel={profile.role}
+          profileOfficeLocation="Main Maintenance Office, Block B"
+          profilePrimaryCampus="Vaigai Hostel Campus"
+          profileStats={[
+            { label: 'Active Tasks', value: String(tasks.length), color: '#996E7D' },
+            { label: 'Completed Jobs', value: String(history.length), color: '#059669' },
+            {
+              label: 'Avg. Rating',
+              value: history.length
+                ? (history.reduce((sum, h) => sum + h.rating, 0) / history.length).toFixed(1) + ' ★'
+                : 'N/A',
+              color: '#D97706',
+            },
+            {
+              label: 'Low Stock Items',
+              value: String(inventory.filter((i) => i.status !== 'In Stock').length),
+              color: '#D9534F',
+            },
+          ]}
         />
 
         {/* Dynamic Route Content */}
@@ -752,7 +776,7 @@ export const MaintenanceDashboard: React.FC<MaintenanceDashboardProps> = ({
                                   ? 'warning'
                                   : task.status === 'Accepted'
                                   ? 'primary'
-                                  : 'neutral'
+                                  : 'secondary'
                               }
                               size="sm"
                             >
@@ -973,7 +997,7 @@ export const MaintenanceDashboard: React.FC<MaintenanceDashboardProps> = ({
                                   ? 'warning'
                                   : task.status === 'Accepted'
                                   ? 'primary'
-                                  : 'neutral'
+                                  : 'secondary'
                               }
                               size="sm"
                             >
